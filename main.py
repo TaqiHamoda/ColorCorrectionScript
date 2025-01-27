@@ -15,11 +15,10 @@ def adjust_brightness_saturation(image, brightness_factor=0, saturation_factor=1
     return cv2.cvtColor(hsv_image, cv2.COLOR_HSV2BGR)
 
 
-def local_contrast_enhancement(image, kernel_size=5, clip_limit=2.0):
-    # Convert the image to LAB color space
+def contrast_enhancement(image, kernel_size=5, clip_limit=2.0):
     hsv_image = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
 
-    # Apply CLAHE to the L channel
+    # Apply CLAHE to the value channel
     clahe = cv2.createCLAHE(clipLimit=clip_limit, tileGridSize=(kernel_size, kernel_size))
     hsv_image[:, :, 2] = clahe.apply(hsv_image[:, :, 2])
 
@@ -57,6 +56,7 @@ def white_balance_gray_world(image):
 
     return white_balance(image, gain)
 
+
 def denoise(image, diameter=5, sigmaColor=50, sigmaSpace=50):
     return cv2.bilateralFilter(image, diameter, sigmaColor, sigmaSpace)
 
@@ -83,7 +83,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     # Create output folder
-    output_folder = os.path.join(os.path.dirname(args.input_folder), 'output')
+    output_folder = os.path.join(os.path.dirname(args.input_folder), f"{os.path.basename(args.input_folder)}_output")
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
 
@@ -106,7 +106,7 @@ if __name__ == '__main__':
 
             # Apply CLAHE
             if not args.skip_clahe:
-                image = local_contrast_enhancement(image, args.clahe_kernel_size, args.clahe_clip_limit)
+                image = contrast_enhancement(image, args.clahe_kernel_size, args.clahe_clip_limit)
 
             # Apply denoising
             if not args.skip_denoising:
