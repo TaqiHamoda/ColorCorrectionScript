@@ -57,6 +57,9 @@ def white_balance_gray_world(image):
 
     return white_balance(image, gain)
 
+def denoise(image, diameter=5, sigmaColor=50, sigmaSpace=50):
+    return cv2.bilateralFilter(image, diameter, sigmaColor, sigmaSpace)
+
 
 if __name__ == '__main__':
     # Parse command line arguments
@@ -73,6 +76,10 @@ if __name__ == '__main__':
     parser.add_argument('--white_balance_patch_width', type=int, default=10, help='Width of the white patch')
     parser.add_argument('--white_balance_patch_height', type=int, default=10, help='Height of the white patch')
     parser.add_argument('--white_balance_percentile', type=float, default=97.5, help='Percentile value for white balancing')
+    parser.add_argument('--skip_denoising', type=lambda x: bool(strtobool(x)), default=False, help='Skip the denoising step')
+    parser.add_argument('--denoise_diameter', type=int, default=5, help='Diameter for denoising')
+    parser.add_argument('--denoise_sigma_color', type=float, default=50.0, help='Sigma color for denoising')
+    parser.add_argument('--denoise_sigma_space', type=float, default=50.0, help='Sigma space for denoising')
     args = parser.parse_args()
 
     # Create output folder
@@ -90,10 +97,7 @@ if __name__ == '__main__':
             image = adjust_brightness_saturation(image, args.brightness_factor, args.saturation_factor)
 
             # Apply white balancing
-            if args.white_balance_type == 'gain':
-                gain = [float(x) for x in args.white_balance_gain.split()]
-                image = white_balance(image, gain)
-            elif args.white_balance_type == 'patch':
+            if args.white_balance_type == 'patch':
                 image = white_balance_patch(image, args.white_balance_patch_column, args.white_balance_patch_row, args.white_balance_patch_width, args.white_balance_patch_height)
             elif args.white_balance_type == 'percentile':
                 image = white_balance_percentile(image, args.white_balance_percentile)
@@ -103,6 +107,10 @@ if __name__ == '__main__':
             # Apply CLAHE
             if not args.skip_clahe:
                 image = local_contrast_enhancement(image, args.clahe_kernel_size, args.clahe_clip_limit)
+
+            # Apply denoising
+            if not args.skip_denoising:
+                image = denoise(image, diameter=args.denoise_diameter, sigmaColor=args.denoise_sigma_color, sigmaSpace=args.denoise_sigma_space)
 
             # Save output image
             output_path = os.path.join(output_folder, filename)
