@@ -90,8 +90,11 @@ if __name__ == '__main__':
         filename_suffix += f"_b{config['brightness_factor']}"
     if 'saturation_factor' in config and config['saturation_factor'] != 1.0:
         filename_suffix += f"_s{config['saturation_factor']}"
+
     if config['white_balance_type'] == 'percentile':
         filename_suffix += f"-percentile{config['white_balance_percentile']}"
+    elif config['white_balance_type'] == 'gray_world':
+        filename_suffix += "-grayworld"
 
     if not config['skip_clahe']:
         filename_suffix += f"_clahe-kernel{config['clahe_kernel_size']}-clip{config['clahe_clip_limit']}"
