@@ -2,8 +2,8 @@
 white_balance_type: gray_world # Options: patch, percentile, gray_world
 
 # Optional parameters with default values
-brightness_factor: 0.0
-saturation_factor: 1.0
+brightness_factor: 10.0
+saturation_factor: 1.25
 
 # CLAHE parameters
 skip_clahe: False
