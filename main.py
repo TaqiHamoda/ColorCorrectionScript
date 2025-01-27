@@ -4,13 +4,13 @@ from distutils.util import strtobool
 
 
 def adjust_brightness_saturation(image, brightness_factor=0, saturation_factor=1):
-    hsv_image = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+    hsv_image = cv2.cvtColor(image, cv2.COLOR_BGR2HSV).astype(np.float32)
 
-    # Adjust the brightness
-    hsv_image[:, :, 2] = np.clip(hsv_image[:, :, 2] + brightness_factor, 0, 255).astype(np.uint8)
+    # Adjust the brightness and saturation
+    hsv_image[:, :, 2] += brightness_factor
+    hsv_image[:, :, 1] *= saturation_factor
 
-    # Adjust the saturation
-    hsv_image[:, :, 1] = np.clip(hsv_image[:, :, 1] * saturation_factor, 0, 255).astype(np.uint8)
+    hsv_image = np.clip(hsv_image, 0, 255).astype(np.uint8)
 
     return cv2.cvtColor(hsv_image, cv2.COLOR_HSV2BGR)
 
