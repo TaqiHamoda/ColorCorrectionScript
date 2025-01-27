@@ -1,0 +1,26 @@
+# Required parameters
+white_balance_type: gray_world # Options: patch, percentile, gray_world
+
+# Optional parameters with default values
+brightness_factor: 0.0
+saturation_factor: 1.0
+
+# CLAHE parameters
+skip_clahe: False
+clahe_kernel_size: 5
+clahe_clip_limit: 2.0
+
+# White balance patch parameters (only used if white_balance_type is 'patch')
+white_balance_patch_column: 0
+white_balance_patch_row: 0
+white_balance_patch_width: 10
+white_balance_patch_height: 10
+
+# White balance percentile parameter (only used if white_balance_type is 'percentile')
+white_balance_percentile: 97.5
+
+# Denoising parameters
+skip_denoising: False
+denoise_diameter: 5
+denoise_sigma_color: 50.0
+denoise_sigma_space: 50.0
