@@ -1,5 +1,5 @@
 # Required parameters
-white_balance_type: gray_world # Options: percentile, gray_world
+white_balance_type: grayworld  # Options: percentile, grayworld, lab
 
 # Optional parameters with default values
 brightness_factor: 10.0
@@ -18,3 +18,12 @@ skip_denoising: False
 denoise_diameter: 5
 denoise_sigma_color: 50.0
 denoise_sigma_space: 50.0
+
+# Local Contrast Enhancement
+local_contrast_enhancement:
+  enabled: False
+  degree: 1.5
+  smoothing: 0.2
+  resolution: 256
+  threshold: 0.04
+  non_linearirty: 0.12
