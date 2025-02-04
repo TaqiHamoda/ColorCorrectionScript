@@ -283,7 +283,7 @@ if __name__ == '__main__':
         config = yaml.safe_load(f)
 
     # Validate config structure (optional, but recommended)
-    required_keys = ['white_balance_type']
+    required_keys = ['brightness_factor', 'saturation_factor']
     for key in required_keys:
         if key not in config:
             raise ValueError(f"Missing required key '{key}' in config file.")
@@ -302,25 +302,26 @@ if __name__ == '__main__':
     if 'saturation_factor' in config and config['saturation_factor'] != 1.0:
         filename_suffix += f"_s{config['saturation_factor']}"
 
-    if config['white_balance_type'] == 'percentile':
-        filename_suffix += f"-percentile{config['white_balance_percentile']}"
-    elif config['white_balance_type'] == 'grayworld':
-        filename_suffix += "-grayworld"
-    elif config['white_balance_type'] == 'lab':
-        filename_suffix += "-lab"
+    if 'white_balance' in config and config['white_balance']['enabled']:
+        if config['white_balance']['algorithm'] == 'percentile':
+            filename_suffix += f"-wb_percentile{config['white_balance']['percentile']}"
+        elif config['white_balance']['algorithm'] == 'grayworld':
+            filename_suffix += "-wb_grayworld"
+        elif config['white_balance']['algorithm'] == 'lab':
+            filename_suffix += "-wb_lab"
 
-    if not config['skip_clahe']:
-        filename_suffix += f"_clahe-kernel{config['clahe_kernel_size']}-clip{config['clahe_clip_limit']}"
+    if 'clahe' in config and config['clahe']['enabled']:
+        filename_suffix += f"_clahe-kernel{config['clahe']['kernel_size']}-clip{config['clahe']['clip_limit']}"
 
-    if not config['skip_denoising']:
-        filename_suffix += f"_denoise-d{config['denoise_diameter']}-sc{config['denoise_sigma_color']}-ss{config['denoise_sigma_space']}"
+    if 'denoising' in config and config['denoising']['enabled']:
+        filename_suffix += f"_denoise-d{config['denoising']['diameter']}-sc{config['denoising']['sigma_color']}-ss{config['denoising']['sigma_space']}"
 
-    if 'local_contrast_enhancement' in config and config['local_contrast_enhancement']:
-        filename_suffix += f"_lce-degree{config['local_contrast_enhancement']['degree']}-smoothing{config['local_contrast_enhancement']['smoothing']}-resolution{config['local_contrast_enhancement']['resolution']}-threshold{config['local_contrast_enhancement']['threshold']}-non_linearirty{config['local_contrast_enhancement']['non_linearirty']}"
+    if 'local_contrast_enhancement' in config and config['local_contrast_enhancement']['enabled']:
+        filename_suffix += f"_lce-degree{config['local_contrast_enhancement']['degree']}-smoothing{config['local_contrast_enhancement']['smoothing']}-resolution{config['local_contrast_enhancement']['resolution']}-threshold{config['local_contrast_enhancement']['threshold']}-non_linearity{config['local_contrast_enhancement']['non_linearity']}"
 
     # Load images from input folder
     for filename in os.listdir(args.input_folder):
-        if filename.endswith(('.jpg', '.png', '.jpeg')): # More concise way to check multiple extensions
+        if filename.endswith(('.jpg', '.png', '.jpeg')): 
             image_path = os.path.join(args.input_folder, filename)
             image = cv2.imread(image_path)
 
@@ -328,30 +329,31 @@ if __name__ == '__main__':
             image = adjust_brightness_saturation(image, config['brightness_factor'], config['saturation_factor'])
 
             # Apply white balancing
-            wb_type = config['white_balance_type']
-            if wb_type == 'percentile':
-                image = white_balance_percentile(image, config['white_balance_percentile'])
-            elif wb_type == 'grayworld':
-                image = white_balance_gray_world(image)
-            elif wb_type == 'lab':
-                image = white_balance_lab(image)
+            if 'white_balance' in config and config['white_balance']['enabled']:
+                wb_algorithm = config['white_balance']['algorithm']
+                if wb_algorithm == 'percentile':
+                    image = white_balance_percentile(image, config['white_balance']['percentile'])
+                elif wb_algorithm == 'grayworld':
+                    image = white_balance_gray_world(image)
+                elif wb_algorithm == 'lab':
+                    image = white_balance_lab(image)
 
             # Apply local contrast enhancement
-            if config['local_contrast_enhancement']['enabled']:
+            if 'local_contrast_enhancement' in config and config['local_contrast_enhancement']['enabled']:
                 image = apply_local_contrast_enhancement(image, 
                                                         degree=config['local_contrast_enhancement']['degree'], 
                                                         smoothing=config['local_contrast_enhancement']['smoothing'], 
                                                         resolution=config['local_contrast_enhancement']['resolution'], 
                                                         threshold=config['local_contrast_enhancement']['threshold'], 
-                                                        non_linearirty=config['local_contrast_enhancement']['non_linearirty'])
+                                                        non_linearity=config['local_contrast_enhancement']['non_linearity'])
 
             # Apply denoising
-            if not config['skip_denoising']:
-                image = denoise(image, config['denoise_diameter'], config['denoise_sigma_color'], config['denoise_sigma_space'])
+            if 'denoising' in config and config['denoising']['enabled']:
+                image = denoise(image, config['denoising']['diameter'], config['denoising']['sigma_color'], config['denoising']['sigma_space'])
 
             # Apply CLAHE
-            if not config['skip_clahe']:
-                image = contrast_enhancement(image, config['clahe_kernel_size'], config['clahe_clip_limit'])
+            if 'clahe' in config and config['clahe']['enabled']:
+                image = contrast_enhancement(image, config['clahe']['kernel_size'], config['clahe']['clip_limit'])
 
             # Save output image
             name, ext = os.path.splitext(filename)

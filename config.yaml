@@ -1,29 +1,28 @@
 # Required parameters
-white_balance_type: grayworld  # Options: percentile, grayworld, lab
+brightness_factor: 10.0  # Default value is 0 (brightness unchanged)
+saturation_factor: 1.25  # Default value is 1 (saturation unchanged)
 
-# Optional parameters with default values
-brightness_factor: 10.0
-saturation_factor: 1.25
+# Optional parameters
+white_balance:
+  enabled: True
+  algorithm: grayworld  # Options: percentile, grayworld, lab
+  percentile: 99.0  # *only used if white_balance_type is 'percentile'*
 
-# CLAHE parameters
-skip_clahe: False
-clahe_kernel_size: 5
-clahe_clip_limit: 2.0
+denoising:
+  enabled: True
+  diameter: 5
+  sigma_color: 50.0
+  sigma_space: 50.0
 
-# White balance percentile parameter (only used if white_balance_type is 'percentile')
-white_balance_percentile: 99
+clahe:
+  enabled: True
+  kernel_size: 5
+  clip_limit: 2.0
 
-# Denoising parameters
-skip_denoising: False
-denoise_diameter: 5
-denoise_sigma_color: 50.0
-denoise_sigma_space: 50.0
-
-# Local Contrast Enhancement
 local_contrast_enhancement:
   enabled: False
   degree: 1.5
   smoothing: 0.2
   resolution: 256
   threshold: 0.04
-  non_linearirty: 0.12
+  non_linearity: 0.12
