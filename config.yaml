@@ -9,13 +9,13 @@ white_balance:
   percentile: 99.0  # *only used if white_balance_type is 'percentile'*
 
 denoising:
-  enabled: True
+  enabled: False
   diameter: 5
   sigma_color: 50.0
   sigma_space: 50.0
 
 clahe:
-  enabled: True
+  enabled: False
   kernel_size: 5
   clip_limit: 2.0
 
@@ -23,6 +23,3 @@ local_contrast_enhancement:
   enabled: False
   degree: 1.5
   smoothing: 0.2
-  resolution: 256
-  threshold: 0.04
-  non_linearity: 0.12
