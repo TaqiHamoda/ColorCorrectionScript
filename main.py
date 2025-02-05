@@ -2,7 +2,7 @@ import numpy as np
 import cv2, argparse, os, yaml
 
 from src.white_balance import white_balance_gray_world, white_balance_percentile, white_balance_lab
-from spatial_scale_enhancement import apply_local_contrast_enhancement, apply_spatial_tonemapping
+from src.spatial_scale_enhancement import apply_local_contrast_enhancement, apply_spatial_tonemapping
 
 
 def adjust_brightness_saturation(image, brightness_factor=0, saturation_factor=1):
@@ -29,7 +29,6 @@ def apply_clahe(image, kernel_size=5, clip_limit=2.0):
 
 def denoise(image, diameter=5, sigmaColor=50, sigmaSpace=50):
     return cv2.bilateralFilter(image, diameter, sigmaColor, sigmaSpace)
-
 
 
 if __name__ == '__main__':
@@ -80,14 +79,41 @@ if __name__ == '__main__':
     if 'local_contrast_enhancement' in config and config['local_contrast_enhancement']['enabled']:
         filename_suffix += f"_lce-degree{config['local_contrast_enhancement']['degree']}-smoothing{config['local_contrast_enhancement']['smoothing']}"
 
+    if 'spatial_tonemapping' in config and config['spatial_tonemapping']['enabled']:
+        filename_suffix += f"_stm-smoothing{config['spatial_tonemapping']['smoothing']}-mid_tone{config['spatial_tonemapping']['mid_tone']}-tonal_width{config['spatial_tonemapping']['tonal_width']}-areas_dark{config['spatial_tonemapping']['areas_dark']}-areas_bright{config['spatial_tonemapping']['areas_bright']}"
+
     # Load images from input folder
     for filename in os.listdir(args.input_folder):
         if filename.endswith(('.jpg', '.png', '.jpeg')): 
             image_path = os.path.join(args.input_folder, filename)
             image = cv2.imread(image_path)
 
+            # Apply local contrast enhancement
+            if 'local_contrast_enhancement' in config and config['local_contrast_enhancement']['enabled']:
+                image = apply_local_contrast_enhancement(image, 
+                                                        degree=config['local_contrast_enhancement']['degree'], 
+                                                        smoothing=config['local_contrast_enhancement']['smoothing'])
+
+            # Apply spatial tonemapping
+            if 'spatial_tonemapping' in config and config['spatial_tonemapping']['enabled']:
+                image = apply_spatial_tonemapping(image, 
+                                                  smoothing=config['spatial_tonemapping']['smoothing'], 
+                                                  mid_tone=config['spatial_tonemapping']['mid_tone'], 
+                                                  tonal_width=config['spatial_tonemapping']['tonal_width'], 
+                                                  areas_dark=config['spatial_tonemapping']['areas_dark'], 
+                                                  areas_bright=config['spatial_tonemapping']['areas_bright'], 
+                                                  preserve_tones=config['spatial_tonemapping']['preserve_tones'])
+
+            # Apply denoising
+            if 'denoising' in config and config['denoising']['enabled']:
+                image = denoise(image, config['denoising']['diameter'], config['denoising']['sigma_color'], config['denoising']['sigma_space'])
+
+            # Apply CLAHE
+            if 'clahe' in config and config['clahe']['enabled']:
+                image = apply_clahe(image, config['clahe']['kernel_size'], config['clahe']['clip_limit'])
+
             # Adjust brightness and saturation
-            image = adjust_brightness_saturation(image, config['brightness_factor'], config['saturation_factor'])
+            image = adjust_brightness_saturation(image, config['brightness_factor'], 1)
 
             # Apply white balancing
             if 'white_balance' in config and config['white_balance']['enabled']:
@@ -99,19 +125,7 @@ if __name__ == '__main__':
                 elif wb_algorithm == 'lab':
                     image = white_balance_lab(image)
 
-            # Apply local contrast enhancement
-            if 'local_contrast_enhancement' in config and config['local_contrast_enhancement']['enabled']:
-                image = apply_local_contrast_enhancement(image, 
-                                                        degree=config['local_contrast_enhancement']['degree'], 
-                                                        smoothing=config['local_contrast_enhancement']['smoothing'])
-
-            # Apply denoising
-            if 'denoising' in config and config['denoising']['enabled']:
-                image = denoise(image, config['denoising']['diameter'], config['denoising']['sigma_color'], config['denoising']['sigma_space'])
-
-            # Apply CLAHE
-            if 'clahe' in config and config['clahe']['enabled']:
-                image = apply_clahe(image, config['clahe']['kernel_size'], config['clahe']['clip_limit'])
+            image = adjust_brightness_saturation(image, 0, config['saturation_factor'])
 
             # Save output image
             name, ext = os.path.splitext(filename)

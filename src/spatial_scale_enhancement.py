@@ -2,7 +2,7 @@ import numpy as np
 import cv2
 
 
-def map_value(value, range_in=(0,1), range_out=(0,1), invert=False, non_lin_convex=None, non_lin_concave=None):
+def map_value(value, range_in, range_out, invert, non_lin_convex, non_lin_concave):
     '''
     ---------------------------------------------------------------------------
          Map a scalar value to an output range in a linear/non-linear way
@@ -125,7 +125,7 @@ def get_photometric_mask(image, smoothing):
     lut_b_max = len(lut_b) -1
 
     # expand dimensions to 3D for code compatibility (filtering assumes a 3D image)
-    image_ph_mask = np.expand_dims(image.copy(), axis=2)
+    image_ph_mask = np.expand_dims(image, axis=2)
 
     # up -> down
     for i in range(1, image_ph_mask.shape[0]-1):
@@ -168,7 +168,7 @@ def get_photometric_mask(image, smoothing):
     return image_ph_mask
 
 
-def apply_spatial_tonemapping(image, image_ph_mask, mid_tone=0.5, tonal_width=0.5, areas_dark=0.5, areas_bright=0.5, preserve_tones=True):
+def apply_spatial_tonemapping(image, smoothing=0.2, mid_tone=0.5, tonal_width=0.5, areas_dark=0.5, areas_bright=0.5, preserve_tones=True):
     '''
     ---------------------------------------------------------------------------
        Apply spatially variable tone mapping based on the local neighborhood
@@ -223,7 +223,7 @@ def apply_spatial_tonemapping(image, image_ph_mask, mid_tone=0.5, tonal_width=0.
     hsv_image = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
     image_out = hsv_image[:, :, 2].astype(np.float32) / 255
 
-
+    image_ph_mask = get_photometric_mask(image_out.copy(), smoothing=smoothing)
 
     # defining parameters
     EPSILON = 1 / 256
@@ -266,7 +266,7 @@ def apply_spatial_tonemapping(image, image_ph_mask, mid_tone=0.5, tonal_width=0.
             )
 
     # lower tones (below mid_tone level)
-    image_lower = image.copy()   
+    image_lower = image_out.copy()   
     image_lower[image_lower>=mid_tone] = 0
     alpha = (image_ph_mask ** 2) / tonal_width
     tone_continuation_factor = mid_tone / (mid_tone + EPSILON - image_ph_mask)
@@ -274,7 +274,7 @@ def apply_spatial_tonemapping(image, image_ph_mask, mid_tone=0.5, tonal_width=0.
     image_lower = (image_lower * (alpha + 1)) / (alpha + image_lower)
 
     # upper tones (above mid_tone level)
-    image_upper = image.copy()
+    image_upper = image_out.copy()
     image_upper[image_upper<mid_tone] = 0
     image_ph_mask_inv = 1 - image_ph_mask
     alpha = (image_ph_mask_inv ** 2) / tonal_width
@@ -288,16 +288,18 @@ def apply_spatial_tonemapping(image, image_ph_mask, mid_tone=0.5, tonal_width=0.
         preservation_degree = np.abs(0.5 - image_ph_mask) / 0.5  # 0: near 0.5
 #        preservation_degree = ((1 + 0.3) * preservation_degree) / (0.3 + preservation_degree)
         image_tonemapped = (preservation_degree * image_tonemapped + 
-                           (1-preservation_degree) * image)
+                           (1-preservation_degree) * image_out)
 
-    return image_tonemapped
+    hsv_image[:, :, 2] = np.clip(255 * image_tonemapped, 0, 255).astype(np.uint8)
+
+    return cv2.cvtColor(hsv_image, cv2.COLOR_HSV2BGR)
 
 
 def apply_local_contrast_enhancement(image, degree=1.5, smoothing=0.2):
     hsv_image = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
     image_out = hsv_image[:, :, 2].astype(np.float32) / 255
 
-    image_ph_mask = get_photometric_mask(image_out, smoothing=smoothing)
+    image_ph_mask = get_photometric_mask(image_out.copy(), smoothing=smoothing)
 
     DARK_BOOST = 0.2
     THRESHOLD_DARK_TONES = 100 / 255

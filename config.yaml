@@ -23,3 +23,12 @@ local_contrast_enhancement:
   enabled: False
   degree: 1.5
   smoothing: 0.2
+
+spatial_tonemapping:
+  enabled: True
+  smoothing: 0.2
+  mid_tone: 0.5
+  tonal_width: 0.5
+  areas_dark: 0.5
+  areas_bright: 0.5
+  preserve_tones: True
