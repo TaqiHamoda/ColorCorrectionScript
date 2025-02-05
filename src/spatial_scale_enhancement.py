@@ -169,57 +169,8 @@ def get_photometric_mask(image, smoothing):
 
 
 def apply_spatial_tonemapping(image, smoothing=0.2, mid_tone=0.5, tonal_width=0.5, areas_dark=0.5, areas_bright=0.5, preserve_tones=True):
-    '''
-    ---------------------------------------------------------------------------
-       Apply spatially variable tone mapping based on the local neighborhood
-    ---------------------------------------------------------------------------
-    
-    Applies different tone mapping curves in each pixel based on its surround.
-    For surround, the photometric mask is used. Alternatively, other filters
-    could be used, like gaussian, bilateral filter, edge-avoiding wavelets etc.
-    Dark pixels are brightened, bright pixels are darkened, and pixels in the 
-    mid_tonedle of the tone range are minimally affected. More information 
-    about the technique can be found in the following papers:
-    
-    Related publications: 
-    Vonikakis, V., Andreadis, I., & Gasteratos, A. (2008). Fast centre-surround 
-    contrast modification. IET Image processing 2(1), 19-34.
-    Vonikakis, V., Winkler, S. (2016). A center-surround framework for spatial 
-    image processing. Proc. IS&T Human Vision & Electronic Imaging.
-    
-    
-    INPUTS
-    ------
-    image: numpy array of WxH of float [0,1]
-        Input grayscale image with values in the interval [0,1].
-    image_ph_mask: numpy array of WxH of float [0,1]
-        Grayscale image whose values represent the neighborhood of the pixels 
-        of the input image. Usually, this image some type of edge aware 
-        filtering, such as bilateral filtering, robust recursive envelopes etc.
-    mid_tone: float [0,1]
-        The mid point between the 'dark' and 'bright' tones. This is equivalent
-        to a pixel value [0,255], but in the interval [0,1].
-    tonal_width: float [0,1]
-        The range of pixel values that will be affected by the correction. 
-        Lower values will localize the enhancement only in a narrow range of 
-        pixel values, whereas for higher values the enhancement will extend to 
-        a greater range of pixel values. 
-    areas_dark: float [0,1]
-        Degree of enhencement in the dark image areas (0 = no enhencement)
-    areas_bright: float [0,1]
-        Degree of enhencement in the bright image areas (0 = no enhencement)
-    preserve_tones: boolean
-        Whether or not to preserve well-exposed tones around the middle of the 
-        range. 
-    verbose: boolean
-        Display outputs.
-    
-    OUTPUT
-    ------
-    image_tonemapped: numpy array of WxH of float [0,1]
-        Tonemapped grayscale image. 
-        
-    '''
+    # Source: https://www.researchgate.net/publication/312243692_A_center-surround_framework_for_spatial_image_processing
+
     hsv_image = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
     image_out = hsv_image[:, :, 2].astype(np.float32) / 255
 
@@ -296,6 +247,8 @@ def apply_spatial_tonemapping(image, smoothing=0.2, mid_tone=0.5, tonal_width=0.
 
 
 def apply_local_contrast_enhancement(image, degree=1.5, smoothing=0.2):
+    # Source: https://www.researchgate.net/publication/221145067_Multi-Scale_Image_Contrast_Enhancement
+
     hsv_image = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
     image_out = hsv_image[:, :, 2].astype(np.float32) / 255
 
