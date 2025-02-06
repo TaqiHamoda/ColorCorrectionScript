@@ -33,36 +33,6 @@ def compute_weights_rog(image, sigma1, sigma2, eps=1e-6):
 
 
 def compute_weights(image, sigma, sharpness):
-    """
-    Compute texture weights for the input image.
-
-    Args:
-    fin (numpy.ndarray): Input image.
-    sigma (float): Standard deviation for the Gaussian filter.
-    sharpness (float): Sharpness parameter.
-
-    Returns:
-    W_h (numpy.ndarray): Horizontal texture weights.
-    W_v (numpy.ndarray): Vertical texture weights.
-    """
-    # range_val = 5
-    # dt0_v = np.diff(image, axis=0)
-    # dt0_v = np.vstack((dt0_v, image[1:, :] - image[:-1, :]))
-    # dt0_h = np.diff(image, axis=1)
-    # dt0_h = np.hstack((dt0_h, image[:, 1:] - image[:, :-1]))
-
-    # mid = np.ceil(range_val / 2)
-    # temp = np.power(np.arange(range_val) - mid, 2)
-    # fil = np.exp(-temp / (2 * sigma ** 2))
-
-    # gauker_h = np.convolve(dt0_h.flatten(), fil, mode='same').reshape(dt0_h.shape)
-    # gauker_v = np.convolve(dt0_v.flatten(), fil, mode='same').reshape(dt0_v.shape)
-
-    # W_h = np.sum(fil) / (np.abs(gauker_h * dt0_h) + sharpness)
-    # W_v = np.sum(fil) / (np.abs(gauker_v * dt0_v) + sharpness)
-
-    # return W_h, W_v
-
     # Compute vertical and horizontal differences
     dt0_v = np.roll(image, -1, axis=0) - image
     dt0_v[-1, :] = image[0, :] - image[-1, :]
@@ -121,9 +91,14 @@ def solve_linear_equation(image, wx, wy, lambda_val):
     return image_out
 
 
-def LECARM(image, camera_model='sigmoid', downsampling=0.5, ratio_max=7.0, lambda_val=0.15, sigma=2, sharpness=0.001, scaling=1):
+def LECARM(image, camera_model='sigmoid', downsampling=0.5, scaling=1):
     hsv_image = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
     illumination = hsv_image[:, :, 2].astype(np.float32) / 255
+
+    ratio_max = 7
+    lambda_val = 0.15
+    sigma = 2
+    sharpness = 0.001
 
     # Apply the LIME estimator
     T_downsampled = zoom(illumination, downsampling, order=0)

@@ -24,10 +24,6 @@ lecarm_tonemapping:  # Global method
   enabled: True
   camera_model: sigmoid  # Options: sigmoid, gamma, betagamma, preferred
   downsampling: 1
-  ratio_max: 0.001
-  lambda_val: 0.15
-  sigma: 2
-  sharpness: 1
   scaling: 10
 
 spatial_tonemapping:  # Local method

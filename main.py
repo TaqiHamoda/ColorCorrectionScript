@@ -87,7 +87,7 @@ if __name__ == '__main__':
         filename_suffix += f"_hdr-down{config['hdr_tonemapping']['downsampling']}-sigma1{config['hdr_tonemapping']['sigma1']}-sigma2{config['hdr_tonemapping']['sigma2']}-epsilon{config['hdr_tonemapping']['epsilon']}"
 
     if 'lecarm_tonemapping' in config and config['lecarm_tonemapping']['enabled']:
-        filename_suffix += f"_lecarm-camera{config['lecarm_tonemapping']['camera_model']}-down{config['lecarm_tonemapping']['downsampling']}-ratio{config['lecarm_tonemapping']['ratio_max']}-lambda{config['lecarm_tonemapping']['lambda_val']}-sigma{config['lecarm_tonemapping']['sigma']}-sharp{config['lecarm_tonemapping']['sharpness']}-scale{config['lecarm_tonemapping']['scaling']}"
+        filename_suffix += f"_lecarm-camera{config['lecarm_tonemapping']['camera_model']}-down{config['lecarm_tonemapping']['downsampling']}-scale{config['lecarm_tonemapping']['scaling']}"
 
     # Load images from input folder
     for filename in os.listdir(args.input_folder):
@@ -124,10 +124,6 @@ if __name__ == '__main__':
                 image = LECARM(image, 
                    camera_model=config['lecarm_tonemapping']['camera_model'], 
                    downsampling=config['lecarm_tonemapping']['downsampling'], 
-                   ratio_max=config['lecarm_tonemapping']['ratio_max'], 
-                   lambda_val=config['lecarm_tonemapping']['lambda_val'], 
-                   sigma=config['lecarm_tonemapping']['sigma'], 
-                   sharpness=config['lecarm_tonemapping']['sharpness'], 
                    scaling=config['lecarm_tonemapping']['scaling'])
 
             # Apply denoising
