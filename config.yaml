@@ -9,25 +9,18 @@ white_balance:
   percentile: 99.0  # *only used if white_balance_type is 'percentile'*
 
 local_contrast_enhancement:
-  enabled: False
+  enabled: True
   degree: 1.5
   smoothing: 0.2
 
-hdr_tonemapping:  # Global method
-  enabled: False
-  downsampling: 0.4
-  sigma1: 1.0
-  sigma2: 3.0
-  epsilon: 0.000001
-
 lecarm_tonemapping:  # Global method
-  enabled: True
+  enabled: False
   camera_model: sigmoid  # Options: sigmoid, gamma, betagamma, preferred
-  downsampling: 1
-  scaling: 10
+  downsampling: 1.0
+  scaling: 1.2
 
 spatial_tonemapping:  # Local method
-  enabled: False
+  enabled: True
   smoothing: 0.2
   mid_tone: 0.5
   tonal_width: 0.5

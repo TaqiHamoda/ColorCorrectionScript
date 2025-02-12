@@ -3,7 +3,7 @@ import cv2, argparse, os, yaml
 
 from src.white_balance import white_balance_gray_world, white_balance_percentile, white_balance_lab
 from src.spatial_processing import local_contrast_enhancement, spatial_tonemapping
-from src.lime_tonemapping import hdr_tonemapping, LECARM
+from src.lime_tonemapping import LECARM
 
 
 def adjust_brightness_saturation(image, brightness_factor=0, saturation_factor=1):
@@ -83,15 +83,12 @@ if __name__ == '__main__':
     if 'spatial_tonemapping' in config and config['spatial_tonemapping']['enabled']:
         filename_suffix += f"_stm-smoothing{config['spatial_tonemapping']['smoothing']}-mid_tone{config['spatial_tonemapping']['mid_tone']}-tonal_width{config['spatial_tonemapping']['tonal_width']}-areas_dark{config['spatial_tonemapping']['areas_dark']}-areas_bright{config['spatial_tonemapping']['areas_bright']}"
 
-    if 'hdr_tonemapping' in config and config['hdr_tonemapping']['enabled']:
-        filename_suffix += f"_hdr-down{config['hdr_tonemapping']['downsampling']}-sigma1{config['hdr_tonemapping']['sigma1']}-sigma2{config['hdr_tonemapping']['sigma2']}-epsilon{config['hdr_tonemapping']['epsilon']}"
-
     if 'lecarm_tonemapping' in config and config['lecarm_tonemapping']['enabled']:
         filename_suffix += f"_lecarm-camera{config['lecarm_tonemapping']['camera_model']}-down{config['lecarm_tonemapping']['downsampling']}-scale{config['lecarm_tonemapping']['scaling']}"
 
     # Load images from input folder
     for filename in os.listdir(args.input_folder):
-        if filename.endswith(('.jpg', '.png', '.jpeg')): 
+        if filename.endswith(('.jpg', '.png', '.jpeg')):
             image_path = os.path.join(args.input_folder, filename)
             image = cv2.imread(image_path)
 
@@ -110,14 +107,6 @@ if __name__ == '__main__':
                                                   areas_dark=config['spatial_tonemapping']['areas_dark'], 
                                                   areas_bright=config['spatial_tonemapping']['areas_bright'], 
                                                   preserve_tones=config['spatial_tonemapping']['preserve_tones'])
-
-            # Apply HDR tonemapping
-            if 'hdr_tonemapping' in config and config['hdr_tonemapping']['enabled']:
-                image = hdr_tonemapping(image, 
-                                        downsampling=config['hdr_tonemapping']['downsampling'], 
-                                        sigma1=config['hdr_tonemapping']['sigma1'], 
-                                        sigma2=config['hdr_tonemapping']['sigma2'], 
-                                        epsilon=config['hdr_tonemapping']['epsilon'])
 
             # Apply LECARM tonemapping
             if 'lecarm_tonemapping' in config and config['lecarm_tonemapping']['enabled']:

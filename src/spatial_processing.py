@@ -4,45 +4,7 @@ import cv2
 
 def map_value(value, range_in, range_out, invert, non_lin_convex, non_lin_concave):
     '''
-    ---------------------------------------------------------------------------
-         Map a scalar value to an output range in a linear/non-linear way
-    ---------------------------------------------------------------------------
 
-    Map scalar values to a particular range, in a linear or non-linear way.
-    This can be helpful for adjusting the range and nonlinear response of 
-    parameters. 
-
-    For more info on the non-linear functions check:
-    Vonikakis, V., Winkler, S. (2016). A center-surround framework for spatial 
-    image processing. Proc. IS&T Human Vision & Electronic Imaging.
-
-
-    INPUTS
-    ------
-    value: float
-        Input value to be mapped.
-    range_in: tuple (min,max)
-        Range of input value. The min and max values that the input value can 
-        attain. 
-    range_out: tuple (min,max)
-        Range of output value. The min and max values that the mapped input 
-        value can attain. 
-    invert: Bool
-        Invert or not the input value. If invert, then min->max and max->min.
-    non_lin_convex: None or float (0,inf)
-        If None, no non-linearity is applied. If float, then a convex 
-        non-linearity is applied, which lowers the values, while not affecting
-        the min and max. non_lin_convex controls the steepness of the 
-        non-linear mapping. Small values near zero, result in a steeper curve.
-    non_lin_concave: None or float (0,inf)
-        If None, no non-linearity is applied. If float, then a concave 
-        non-linearity is applied, which increases the values, while not 
-        affecting min and max. non_lin_concave controls the steepness of the 
-        non-linear mapping. Small values near zero, result in a steeper curve.
-
-    OUTPUT
-    ------
-    Mapped value 
     '''
     
     # truncate value to within input range limits
@@ -92,8 +54,10 @@ def get_sigmoid_lut(resolution, threshold, non_linearity):
     return lut
 
 
-def get_photometric_mask(image, smoothing):
+def get_photometric_mask(illumination, smoothing):
     '''
+    source: 
+
     Intuition about the threshold and non_linearirty values of the LUTs
     threshold: 
         The larger it is, the stronger the blurring, the better the local 
@@ -125,7 +89,7 @@ def get_photometric_mask(image, smoothing):
     lut_b_max = len(lut_b) -1
 
     # expand dimensions to 3D for code compatibility (filtering assumes a 3D image)
-    image_ph_mask = np.expand_dims(image, axis=2)
+    image_ph_mask = np.expand_dims(illumination.copy(), axis=2)
 
     # up -> down
     for i in range(1, image_ph_mask.shape[0]-1):
@@ -168,16 +132,14 @@ def get_photometric_mask(image, smoothing):
     return image_ph_mask
 
 
-def spatial_tonemapping(image, smoothing=0.2, mid_tone=0.5, tonal_width=0.5, areas_dark=0.5, areas_bright=0.5, preserve_tones=True):
-    # Source: https://www.researchgate.net/publication/312243692_A_center-surround_framework_for_spatial_image_processing
-
+def spatial_tonemapping(image, smoothing=0.2, mid_tone=0.5, tonal_width=0.5, areas_dark=0.5, areas_bright=0.5, preserve_tones=True, eps = 1 / 256):
+    '''
+    Source: Vassilios Vonikakis, Stefan Winkler, "A center-surround framework for spatial image processing"  in Proc. IS&T Int’l. Symp. on Electronic Imaging: Retinex at 50,  2016,  https://doi.org/10.2352/ISSN.2470-1173.2016.6.RETINEX-020
+    '''
     hsv_image = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
-    image_out = hsv_image[:, :, 2].astype(np.float32) / 255
+    illumination = hsv_image[:, :, 2].astype(np.float32) / 255
 
-    image_ph_mask = get_photometric_mask(image_out.copy(), smoothing=smoothing)
-
-    # defining parameters
-    EPSILON = 1 / 256
+    image_ph_mask = get_photometric_mask(illumination, smoothing=smoothing)
 
     # adjust range and non-linear response of parameters
     mid_tone = map_value(
@@ -192,7 +154,7 @@ def spatial_tonemapping(image, smoothing=0.2, mid_tone=0.5, tonal_width=0.5, are
     tonal_width = map_value(
             value=tonal_width, 
             range_in=(0,1), 
-            range_out=(EPSILON,1), 
+            range_out=(eps,1), 
             invert=False, 
             non_lin_convex=0.1, 
             non_lin_concave=None
@@ -217,29 +179,26 @@ def spatial_tonemapping(image, smoothing=0.2, mid_tone=0.5, tonal_width=0.5, are
             )
 
     # lower tones (below mid_tone level)
-    image_lower = image_out.copy()   
-    image_lower[image_lower>=mid_tone] = 0
-    alpha = (image_ph_mask ** 2) / tonal_width
-    tone_continuation_factor = mid_tone / (mid_tone + EPSILON - image_ph_mask)
+    image_lower = illumination.copy()   
+    image_lower[image_lower >= mid_tone] = 0
+    alpha = np.power(image_ph_mask, 2) / tonal_width
+    tone_continuation_factor = mid_tone / np.maximum(mid_tone - image_ph_mask, eps)
     alpha = alpha * tone_continuation_factor + areas_dark
-    image_lower = (image_lower * (alpha + 1)) / (alpha + image_lower)
+    image_lower = image_lower * (alpha + 1) / (alpha + image_lower)
 
     # upper tones (above mid_tone level)
-    image_upper = image_out.copy()
-    image_upper[image_upper<mid_tone] = 0
+    image_upper = illumination.copy()
+    image_upper[image_upper < mid_tone] = 0
     image_ph_mask_inv = 1 - image_ph_mask
-    alpha = (image_ph_mask_inv ** 2) / tonal_width
-    tone_continuation_factor = mid_tone / ((1 - mid_tone) - image_ph_mask_inv)
+    alpha = np.power(image_ph_mask_inv, 2) / tonal_width
+    tone_continuation_factor = mid_tone / np.maximum(1 - mid_tone - image_ph_mask_inv, eps)
     alpha = alpha * tone_continuation_factor + areas_bright 
-    image_upper = (image_upper * alpha) / (alpha + 1 - image_upper)
+    image_upper = (image_upper * alpha) / (1 + alpha - image_upper)
 
     image_tonemapped = image_lower + image_upper
-
     if preserve_tones is True:
-        preservation_degree = np.abs(0.5 - image_ph_mask) / 0.5  # 0: near 0.5
-#        preservation_degree = ((1 + 0.3) * preservation_degree) / (0.3 + preservation_degree)
-        image_tonemapped = (preservation_degree * image_tonemapped + 
-                           (1-preservation_degree) * image_out)
+        preservation_degree = np.abs(0.5 - image_ph_mask) / 0.5
+        image_tonemapped = preservation_degree * image_tonemapped + illumination * (1 - preservation_degree)
 
     hsv_image[:, :, 2] = np.clip(255 * image_tonemapped, 0, 255).astype(np.uint8)
 
@@ -247,31 +206,23 @@ def spatial_tonemapping(image, smoothing=0.2, mid_tone=0.5, tonal_width=0.5, are
 
 
 def local_contrast_enhancement(image, degree=1.5, smoothing=0.2):
-    # Source: https://www.researchgate.net/publication/221145067_Multi-Scale_Image_Contrast_Enhancement
-
+    '''
+    Source: V. Vonikakis and I. Andreadis, "Multi-scale image contrast enhancement," 2008 10th International Conference on Control, Automation, Robotics and Vision, Hanoi, Vietnam, 2008, pp. 856-861, doi: 10.1109/ICARCV.2008.4795629.
+    '''
     hsv_image = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
-    image_out = hsv_image[:, :, 2].astype(np.float32) / 255
 
-    image_ph_mask = get_photometric_mask(image_out.copy(), smoothing=smoothing)
+    illumination = hsv_image[:, :, 2].astype(np.float32) / 255
+    image_ph_mask = get_photometric_mask(illumination, smoothing=smoothing)
 
-    DARK_BOOST = 0.2
-    THRESHOLD_DARK_TONES = 100 / 255
-    detail_amplification_global = degree
-
-    image_details = image_out - image_ph_mask  # image details
+    image_details = illumination - image_ph_mask
 
     # special treatment for dark regions
-    detail_amplification_local = image_ph_mask / THRESHOLD_DARK_TONES
-    detail_amplification_local[detail_amplification_local>1] = 1
-    detail_amplification_local = ((1 - detail_amplification_local) * 
-                                  DARK_BOOST) + 1  # [1, 1.2]
+    detail_amplification_local = 255 * image_ph_mask / 100
+    detail_amplification_local[detail_amplification_local > 1] = 1
+    detail_amplification_local = 1 + 0.2 * (1 - detail_amplification_local)  # [1, 1.2]
 
-    # apply all detail adjustements
-    image_details = (image_details * 
-                     detail_amplification_global * 
-                     detail_amplification_local)
-
-    # add details back to the local neighborhood and stay within range
+    # apply all detail adjustements and merge them back to the original image
+    image_details = (degree * image_details * detail_amplification_local)
     hsv_image[:, :, 2] = np.clip(255 * (image_ph_mask + image_details), 0, 255).astype(np.uint8)
 
     return cv2.cvtColor(hsv_image, cv2.COLOR_HSV2BGR)

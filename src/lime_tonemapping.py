@@ -6,36 +6,15 @@ from scipy.ndimage import gaussian_filter1d, zoom
 from scipy.signal import convolve2d
 
 
-def compute_weights_rog(image, sigma1, sigma2, eps=1e-6):
-    # Source: https://caibolun.github.io/papers/RoG.pdf
-
-    dx = np.diff(image, axis=1)
-    dx = np.pad(dx, ((0, 0), (0, 1)), mode='constant')
-    dy = np.diff(image, axis=0)
-    dy = np.pad(dy, ((1, 0), (0, 0)), mode='constant')
-
-    gdx1 = gaussian_filter1d(dx, sigma1, axis=1)
-    gdy1 = gaussian_filter1d(dy, sigma1, axis=0)
-
-    gdx2 = gaussian_filter1d(dx, sigma2, axis=1)
-    gdy2 = gaussian_filter1d(dy, sigma2, axis=0)
-
-    wx = 1 / (np.abs(gdx1) * np.abs(gdx2) + eps)
-    wy = 1 / (np.abs(gdy1) * np.abs(gdy2) + eps)
-    wx = gaussian_filter1d(wx, sigma1/2, axis=1)
-    wy = gaussian_filter1d(wy, sigma1/2, axis=0)
-
-    # Remove the last column and row to match the input image shape
-    wx[:, :-1] = 0
-    wy[:-1, :] = 0
-
-    return wx, wy
-
-
 def compute_weights(image, sigma, sharpness):
+    '''
+    Source: X. Guo, Y. Li and H. Ling, "LIME: Low-Light Image Enhancement via Illumination Map Estimation," in IEEE Transactions on Image Processing, vol. 26, no. 2, pp. 982-993, Feb. 2017, doi: 10.1109/TIP.2016.2639450.
+    '''
+
     # Compute vertical and horizontal differences
     dt0_v = np.roll(image, -1, axis=0) - image
     dt0_v[-1, :] = image[0, :] - image[-1, :]
+
     dt0_h = np.roll(image, -1, axis=1) - image
     dt0_h[:, -1] = image[:, 0] - image[:, -1]
 
@@ -55,8 +34,11 @@ def compute_weights(image, sigma, sharpness):
 
 
 def solve_linear_equation(image, wx, wy, lambda_val):
-    # Source: https://www.researchgate.net/publication/320728375_A_New_Low-Light_Image_Enhancement_Algorithm_Using_Camera_Response_Model
-    # Source: https://ieeexplore.ieee.org/document/7782813
+    '''
+    Source: X. Guo, Y. Li and H. Ling, "LIME: Low-Light Image Enhancement via Illumination Map Estimation," in IEEE Transactions on Image Processing, vol. 26, no. 2, pp. 982-993, Feb. 2017, doi: 10.1109/TIP.2016.2639450.
+
+    Source: Z. Ying, G. Li, Y. Ren, R. Wang and W. Wang, "A New Low-Light Image Enhancement Algorithm Using Camera Response Model," 2017 IEEE International Conference on Computer Vision Workshops (ICCVW), Venice, Italy, 2017, pp. 3015-3022, doi: 10.1109/ICCVW.2017.356.
+    '''
 
     height, width = image.shape
     k = height * width
@@ -92,6 +74,9 @@ def solve_linear_equation(image, wx, wy, lambda_val):
 
 
 def LECARM(image, camera_model='sigmoid', downsampling=0.5, scaling=1):
+    '''
+    Source: Y. Ren, Z. Ying, T. H. Li and G. Li, "LECARM: Low-Light Image Enhancement Using the Camera Response Model," in IEEE Transactions on Circuits and Systems for Video Technology, vol. 29, no. 4, pp. 968-981, April 2019, doi: 10.1109/TCSVT.2018.2828141. 
+    '''
     hsv_image = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
     illumination = hsv_image[:, :, 2].astype(np.float32) / 255
 
@@ -129,33 +114,3 @@ def LECARM(image, camera_model='sigmoid', downsampling=0.5, scaling=1):
         image_out = (cf * ka / (cf * (ka - 1) + 1)) ** 0.14
 
     return np.clip(255 * image_out, 0, 255).astype(np.uint8)
-
-
-def hdr_tonemapping(image, downsampling=0.5, sigma1=1, sigma2=3, epsilon=1e-6):
-    # Source: https://www.mdpi.com/1424-8220/20/16/4378
-    # Source: https://www.researchgate.net/publication/320728375_A_New_Low-Light_Image_Enhancement_Algorithm_Using_Camera_Response_Model
-
-    hsv_image = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
-    image_out = hsv_image[:, :, 2].astype(np.float32) / 255
-
-    lambda_val = 0.001
-
-    T_downsampled = zoom(image_out, downsampling, order=0)
-    wx, wy = compute_weights_rog(T_downsampled, sigma1, sigma2, eps=epsilon)
-    T_estimated = solve_linear_equation(T_downsampled, wx, wy, lambda_val)
-    T_upsampled = zoom(T_estimated, 1/downsampling, order=0)
-
-    # Enhancement
-    r_ratio = 1 / (T_upsampled + epsilon)
-
-    p1 = 1 + np.std(image_out)
-    p2 = -p1 / 4
-
-    gamma = np.power(r_ratio, p2)
-    beta = np.exp(p1 * (1 - gamma))
-
-    image_out = beta * np.power(image_out, gamma)
-    
-    hsv_image[:, :, 2] = np.clip(255 * image_out, 0, 255).astype(np.uint8)
-
-    return cv2.cvtColor(hsv_image, cv2.COLOR_HSV2BGR)
