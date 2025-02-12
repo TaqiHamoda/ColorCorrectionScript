@@ -8,7 +8,38 @@ from scipy.signal import convolve2d
 
 def compute_weights(image, sigma, sharpness):
     '''
-    Source: X. Guo, Y. Li and H. Ling, "LIME: Low-Light Image Enhancement via Illumination Map Estimation," in IEEE Transactions on Image Processing, vol. 26, no. 2, pp. 982-993, Feb. 2017, doi: 10.1109/TIP.2016.2639450.
+    Computes texture weights for an image based on horizontal and vertical differences.
+
+    This function calculates texture weights for an image by analyzing horizontal and vertical
+    gradients and applying a smoothing filter. The weights are used in applications such as
+    low-light image enhancement to preserve texture and edges while reducing noise. The method
+    is based on the LIME (Low-Light Image Enhancement via Illumination Map Estimation) framework.
+
+    Parameters:
+    -----------
+    image : numpy.ndarray
+        A 2D numpy array representing the grayscale image for which weights are computed.
+
+    sigma : int
+        The size of the smoothing filter kernel. A larger sigma results in stronger smoothing.
+
+    sharpness : float
+        A small constant added to the denominator to avoid division by zero and control the
+        sensitivity of the weights to texture details. Lower values increase sensitivity.
+
+    Returns:
+    --------
+    W_h : numpy.ndarray
+        A 2D numpy array representing the horizontal texture weights.
+
+    W_v : numpy.ndarray
+        A 2D numpy array representing the vertical texture weights.
+
+    References:
+    -----------
+    X. Guo, Y. Li and H. Ling, "LIME: Low-Light Image Enhancement via Illumination Map Estimation,"
+    in IEEE Transactions on Image Processing, vol. 26, no. 2, pp. 982-993, Feb. 2017,
+    doi: 10.1109/TIP.2016.2639450.
     '''
 
     # Compute vertical and horizontal differences
@@ -35,9 +66,41 @@ def compute_weights(image, sigma, sharpness):
 
 def solve_linear_equation(image, wx, wy, lambda_val):
     '''
-    Source: X. Guo, Y. Li and H. Ling, "LIME: Low-Light Image Enhancement via Illumination Map Estimation," in IEEE Transactions on Image Processing, vol. 26, no. 2, pp. 982-993, Feb. 2017, doi: 10.1109/TIP.2016.2639450.
+    Solves a linear equation for low-light image enhancement.
 
-    Source: Z. Ying, G. Li, Y. Ren, R. Wang and W. Wang, "A New Low-Light Image Enhancement Algorithm Using Camera Response Model," 2017 IEEE International Conference on Computer Vision Workshops (ICCVW), Venice, Italy, 2017, pp. 3015-3022, doi: 10.1109/ICCVW.2017.356.
+    This function solves a linear equation to estimate the illumination map of a low-light image.
+    The equation is based on the camera response model and is used to enhance the image by adjusting
+    the illumination map. The method is inspired by the LIME (Low-Light Image Enhancement via Illumination
+    Map Estimation) framework and the camera response model-based approach.
+
+    Parameters:
+    -----------
+    image : numpy.ndarray
+        A 2D numpy array representing the grayscale image to be enhanced.
+
+    wx : numpy.ndarray
+        A 2D numpy array representing the horizontal gradient of the image.
+
+    wy : numpy.ndarray
+        A 2D numpy array representing the vertical gradient of the image.
+
+    lambda_val : float
+        A regularization parameter that controls the strength of the smoothing term in the equation.
+
+    Returns:
+    --------
+    image_out : numpy.ndarray
+        A 2D numpy array representing the enhanced image.
+
+    References:
+    -----------
+    X. Guo, Y. Li and H. Ling, "LIME: Low-Light Image Enhancement via Illumination Map Estimation,"
+    in IEEE Transactions on Image Processing, vol. 26, no. 2, pp. 982-993, Feb. 2017,
+    doi: 10.1109/TIP.2016.2639450.
+
+    Z. Ying, G. Li, Y. Ren, R. Wang and W. Wang, "A New Low-Light Image Enhancement Algorithm Using
+    Camera Response Model," 2017 IEEE International Conference on Computer Vision Workshops (ICCVW),
+    Venice, Italy, 2017, pp. 3015-3022, doi: 10.1109/ICCVW.2017.356.
     '''
 
     height, width = image.shape
@@ -75,8 +138,40 @@ def solve_linear_equation(image, wx, wy, lambda_val):
 
 def LECARM(image, camera_model='sigmoid', downsampling=0.5, scaling=1):
     '''
-    Source: Y. Ren, Z. Ying, T. H. Li and G. Li, "LECARM: Low-Light Image Enhancement Using the Camera Response Model," in IEEE Transactions on Circuits and Systems for Video Technology, vol. 29, no. 4, pp. 968-981, April 2019, doi: 10.1109/TCSVT.2018.2828141. 
+    Enhances a low-light image using the LECARM (Low-Light Image Enhancement Using the Camera Response Model) algorithm.
+
+    This function takes a low-light image as input and applies the LECARM algorithm to enhance its brightness and visibility.
+    The algorithm uses a camera response model to estimate the illumination map of the image and then applies a brightness
+    transfer function to adjust the image's brightness. The method is based on the LECARM framework and can be used with
+    different camera models.
+
+    Parameters:
+    -----------
+    image : numpy.ndarray
+        A 3D numpy array representing the input image in BGR format.
+
+    camera_model : str, optional
+        The camera response model to use for enhancement. Can be one of 'sigmoid', 'gamma', 'betagamma', or 'preferred'.
+        Default is 'sigmoid'.
+
+    downsampling : float, optional
+        The downsampling ratio for the illumination map estimation. Default is 0.5.
+
+    scaling : float, optional
+        The scaling factor for the brightness transfer function. Default is 1.
+
+    Returns:
+    --------
+    image_out : numpy.ndarray
+        A 3D numpy array representing the enhanced image in BGR format.
+
+    References:
+    -----------
+    Y. Ren, Z. Ying, T. H. Li and G. Li, "LECARM: Low-Light Image Enhancement Using the Camera Response Model,"
+    in IEEE Transactions on Circuits and Systems for Video Technology, vol. 29, no. 4, pp. 968-981, April 2019,
+    doi: 10.1109/TCSVT.2018.2828141.
     '''
+
     hsv_image = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
     illumination = hsv_image[:, :, 2].astype(np.float32) / 255
 

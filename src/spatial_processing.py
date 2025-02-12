@@ -4,16 +4,35 @@ import cv2
 
 def get_photometric_mask(illumination, smoothing):
     '''
-    source: https://github.com/bbonik/image_enhancement/tree/master
+    Computes a photometric mask for image enhancement using a non-linear filtering approach.
 
-    Intuition about the threshold and non_linearirty values of the LUTs
-    threshold: 
-        The larger it is, the stronger the blurring, the better the local 
-        contrast but also more halo artifacts (less edge preservation).
-    non_linearity: 
-        The lower it is, the more it preserves the edges, but also has more 
-        'bleeding' effects.
+    This function generates a photometric mask by applying a series of non-linear operations
+    to the input illumination channel. The mask is designed to enhance local contrast while
+    preserving edges and minimizing artifacts such as halos and bleeding effects. The process
+    involves creating Look-Up Tables (LUTs) based on smoothing parameters and applying them
+    in multiple directions to the illumination channel.
+
+    Parameters:
+    -----------
+    illumination : numpy.ndarray
+        A 2D numpy array representing the illumination channel of an image.
+
+    smoothing : float
+        A smoothing parameter that controls the strength of the blurring effect. Higher values
+        result in stronger blurring, which improves local contrast but may introduce more halo
+        artifacts. Lower values preserve edges better but may cause more 'bleeding' effects.
+
+    Returns:
+    --------
+    numpy.ndarray
+        A 2D numpy array representing the photometric mask. This mask can be used to enhance
+        the illumination channel of an image while preserving edges and minimizing artifacts.
+
+    References:
+    -----------
+    Source: https://github.com/bbonik/image_enhancement/tree/master
     '''
+
     # internal parameters
     thr = 255 * np.ones((256, 2))
     thr[:, 0] *= smoothing
@@ -61,10 +80,53 @@ def get_photometric_mask(illumination, smoothing):
     return np.squeeze(image_ph_mask)
 
 
-def spatial_tonemapping(image, smoothing=0.2, mid_tone=0.5, tonal_width=0.5, areas_dark=0.5, areas_bright=0.5, preserve_tones=True, eps = 1 / 256):
+def spatial_tonemapping(image, smoothing=0.2, mid_tone=0.5, tonal_width=0.5, areas_dark=0.5, areas_bright=0.5, preserve_tones=True, eps=1 / 256):
     '''
-    Source: Vassilios Vonikakis, Stefan Winkler, "A center-surround framework for spatial image processing"  in Proc. IS&T Int’l. Symp. on Electronic Imaging: Retinex at 50,  2016,  https://doi.org/10.2352/ISSN.2470-1173.2016.6.RETINEX-020
+    Applies spatial tonemapping to an image using a center-surround framework for image enhancement.
+
+    This function enhances the tonal range of an image by separating it into dark and bright regions
+    and applying non-linear adjustments to each region. The process is based on the center-surround
+    framework described in the referenced paper. It preserves the overall tonal structure while
+    improving local contrast and detail visibility.
+
+    Parameters:
+    -----------
+    image : numpy.ndarray
+        A 3D numpy array representing the input image in BGR format.
+
+    smoothing : float (default=0.2)
+        Controls the strength of the photometric mask smoothing. Higher values result in stronger
+        smoothing, which can reduce noise but may also reduce detail.
+
+    mid_tone : float (default=0.5)
+        The mid-tone value used to separate dark and bright regions. Values range from 0 to 1.
+
+    tonal_width : float (default=0.5)
+        Controls the width of the tonal range adjustment. Higher values result in a wider tonal range.
+
+    areas_dark : float (default=0.5)
+        Controls the adjustment strength for dark regions. Values range from 0 to 1.
+
+    areas_bright : float (default=0.5)
+        Controls the adjustment strength for bright regions. Values range from 0 to 1.
+
+    preserve_tones : bool (default=True)
+        If True, preserves the overall tonal structure of the image while enhancing local contrast.
+
+    eps : float (default=1/256)
+        A small constant to avoid division by zero and ensure numerical stability.
+
+    Returns:
+    --------
+    numpy.ndarray
+        A 3D numpy array representing the tonemapped image in BGR format.
+
+    References:
+    -----------
+    Vassilios Vonikakis, Stefan Winkler, "A center-surround framework for spatial image processing"
+    in Proc. IS&T Int'l. Symp. on Electronic Imaging: Retinex at 50, 2016, doi: 10.2352/ISSN.2470-1173.2016.6.RETINEX-020
     '''
+
     # adjust range and non-linear response of parameters
     mid_tone = np.clip(mid_tone, 0, 1)
 
@@ -112,8 +174,38 @@ def spatial_tonemapping(image, smoothing=0.2, mid_tone=0.5, tonal_width=0.5, are
 
 def local_contrast_enhancement(image, degree=1.5, smoothing=0.2):
     '''
-    Source: V. Vonikakis and I. Andreadis, "Multi-scale image contrast enhancement," 2008 10th International Conference on Control, Automation, Robotics and Vision, Hanoi, Vietnam, 2008, pp. 856-861, doi: 10.1109/ICARCV.2008.4795629.
+    Enhances local contrast in an image using a multi-scale approach.
+
+    This function improves the visibility of details in an image by amplifying local contrast
+    while preserving the overall structure. It works by separating the illumination and detail
+    components of the image, amplifying the details, and then recombining them. The process is
+    based on the multi-scale contrast enhancement framework described in the referenced paper.
+
+    Parameters:
+    -----------
+    image : numpy.ndarray
+        A 3D numpy array representing the input image in BGR format.
+
+    degree : float (default=1.5)
+        Controls the strength of the detail amplification. Higher values result in stronger
+        contrast enhancement but may introduce artifacts if set too high.
+
+    smoothing : float (default=0.2)
+        Controls the strength of the photometric mask smoothing. Higher values result in stronger
+        smoothing, which can reduce noise but may also reduce detail.
+
+    Returns:
+    --------
+    numpy.ndarray
+        A 3D numpy array representing the contrast-enhanced image in BGR format.
+
+    References:
+    -----------
+    V. Vonikakis and I. Andreadis, "Multi-scale image contrast enhancement," 
+    2008 10th International Conference on Control, Automation, Robotics and Vision, 
+    Hanoi, Vietnam, 2008, pp. 856-861, doi: 10.1109/ICARCV.2008.4795629.
     '''
+
     hsv_image = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
 
     illumination = hsv_image[:, :, 2].astype(np.float32) / 255

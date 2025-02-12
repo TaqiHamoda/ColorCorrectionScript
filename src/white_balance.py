@@ -3,7 +3,28 @@ import cv2
 
 
 def white_balance_gray_world(image):
-    # Source: https://www.researchgate.net/publication/235350557_Combining_Gray-World_assumption_White-Point_correction_and_power_transformation_for_automatic_white_balance
+    '''
+    Applies white balance to an image using the Gray-World assumption.
+
+    This function takes an image as input and applies the Gray-World assumption to estimate the color temperature
+    of the scene and adjust the image's white balance accordingly. The method is based on the idea that the average
+    color of the scene is gray, and uses a power transformation to adjust the color balance of the image.
+
+    Parameters:
+    -----------
+    image : numpy.ndarray
+        A 3D numpy array representing the input image in BGR format.
+
+    Returns:
+    --------
+    image_out : numpy.ndarray
+        A 3D numpy array representing the output image with adjusted white balance in BGR format.
+
+    References:
+    -----------
+    Vonikakis, Vassilios & Arapakis, & Andreadis,. (2011). Combining Gray-World assumption, White-Point correction 
+    and power transformation for automatic white balance.
+    '''
 
     image_out = image.astype(np.float32)
 
@@ -37,6 +58,27 @@ def white_balance_gray_world(image):
 
 
 def white_balance_percentile(image, percentile=97.5):
+    '''
+    Applies white balance to an image using a percentile-based approach.
+
+    This function takes an image as input and applies a white balance correction based on the percentile values
+    of each color channel. The method calculates the gain required to bring the percentile value of each channel
+    to the maximum possible value (255), and then applies this gain to each channel.
+
+    Parameters:
+    -----------
+    image : numpy.ndarray
+        A 3D numpy array representing the input image in BGR format.
+
+    percentile : float, optional
+        The percentile value to use for calculating the gain. Default is 97.5.
+
+    Returns:
+    --------
+    image_out : numpy.ndarray
+        A 3D numpy array representing the output image with adjusted white balance in BGR format.
+    '''
+
     image_out = image.astype(np.float32)
 
     # Calculate the percentile values for each channel
@@ -51,8 +93,29 @@ def white_balance_percentile(image, percentile=97.5):
 
 
 def white_balance_lab(image):
-    # Source:https://isprs-archives.copernicus.org/articles/XL-5-W5/25/2015/isprsarchives-XL-5-W5-25-2015.pdf
-    # Reference: https://docs.opencv.org/2.4/modules/imgproc/doc/miscellaneous_transformations.html?highlight=cvtcolor#cvtcolor
+    '''
+    Applies white balance to an image using the LAB color space.
+
+    This function takes an image as input, converts it to the LAB color space, and applies a white balance correction
+    by normalizing the a* and b* components. The method is based on the idea of setting the mean of the a* and b*
+    components to zero, which helps to remove any color casts and improve the overall color balance of the image.
+
+    Parameters:
+    -----------
+    image : numpy.ndarray
+        A 3D numpy array representing the input image in BGR format.
+
+    Returns:
+    --------
+    image_out : numpy.ndarray
+        A 3D numpy array representing the output image with adjusted white balance in BGR format.
+
+    References:
+    -----------
+    Bianco, G. and Muzzupappa, M. and Bruno, F. and Garcia, R. and Neumann, L. (2015). A NEW COLOR CORRECTION METHOD 
+    FOR UNDERWATER IMAGING. The International Archives of the Photogrammetry, Remote Sensing and Spatial Information Sciences, 
+    XL-5/W5, 25-32. doi: 10.5194/isprsarchives-XL-5-W5-25-2015
+    '''
 
     # Convert the image from BGR to LAB
     lab_image = cv2.cvtColor(image, cv2.COLOR_BGR2LAB).astype(np.float32)
