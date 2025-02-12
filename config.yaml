@@ -1,6 +1,7 @@
 # Required parameters
 brightness_factor: 10.0  # Default value is 0 (brightness unchanged)
 saturation_factor: 1.25  # Default value is 1 (saturation unchanged)
+image_extensions: ['jpg', 'png', 'jpeg']
 
 # Optional parameters
 white_balance:
@@ -10,7 +11,7 @@ white_balance:
 
 local_contrast_enhancement:
   enabled: True
-  degree: 1.5
+  degree: 3
   smoothing: 0.2
 
 lecarm_tonemapping:  # Global method

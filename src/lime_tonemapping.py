@@ -2,7 +2,7 @@ import numpy as np
 import cv2
 from scipy.sparse import spdiags, csc_matrix
 from scipy.sparse.linalg import bicgstab
-from scipy.ndimage import gaussian_filter1d, zoom
+from scipy.ndimage import zoom
 from scipy.signal import convolve2d
 
 
@@ -89,7 +89,7 @@ def LECARM(image, camera_model='sigmoid', downsampling=0.5, scaling=1):
     T_downsampled = zoom(illumination, downsampling, order=0)
     wx, wy = compute_weights(T_downsampled, sigma, sharpness)
     T_estimated = solve_linear_equation(T_downsampled, wx, wy, lambda_val)
-    T_upsampled = zoom(T_estimated, 1/downsampling, order=0)
+    T_upsampled = zoom(T_estimated, 1 / downsampling, order=0)
 
     # Compute the scaling factor K
     K = np.minimum(1.0 / T_upsampled, ratio_max)

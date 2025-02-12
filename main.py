@@ -88,7 +88,7 @@ if __name__ == '__main__':
 
     # Load images from input folder
     for filename in os.listdir(args.input_folder):
-        if filename.endswith(('.jpg', '.png', '.jpeg')):
+        if filename.split('.')[-1].lower() in config['image_extensions']:
             image_path = os.path.join(args.input_folder, filename)
             image = cv2.imread(image_path)
 
@@ -101,18 +101,18 @@ if __name__ == '__main__':
             # Apply spatial tonemapping
             if 'spatial_tonemapping' in config and config['spatial_tonemapping']['enabled']:
                 image = spatial_tonemapping(image, 
-                                                  smoothing=config['spatial_tonemapping']['smoothing'], 
-                                                  mid_tone=config['spatial_tonemapping']['mid_tone'], 
-                                                  tonal_width=config['spatial_tonemapping']['tonal_width'], 
-                                                  areas_dark=config['spatial_tonemapping']['areas_dark'], 
-                                                  areas_bright=config['spatial_tonemapping']['areas_bright'], 
+                                                  smoothing=config['spatial_tonemapping']['smoothing'],
+                                                  mid_tone=config['spatial_tonemapping']['mid_tone'],
+                                                  tonal_width=config['spatial_tonemapping']['tonal_width'],
+                                                  areas_dark=config['spatial_tonemapping']['areas_dark'],
+                                                  areas_bright=config['spatial_tonemapping']['areas_bright'],
                                                   preserve_tones=config['spatial_tonemapping']['preserve_tones'])
 
             # Apply LECARM tonemapping
             if 'lecarm_tonemapping' in config and config['lecarm_tonemapping']['enabled']:
-                image = LECARM(image, 
-                   camera_model=config['lecarm_tonemapping']['camera_model'], 
-                   downsampling=config['lecarm_tonemapping']['downsampling'], 
+                image = LECARM(image,
+                   camera_model=config['lecarm_tonemapping']['camera_model'],
+                   downsampling=config['lecarm_tonemapping']['downsampling'],
                    scaling=config['lecarm_tonemapping']['scaling'])
 
             # Apply denoising
