@@ -9,16 +9,27 @@ white_balance:
   algorithm: grayworld  # Options: percentile, grayworld, lab
   percentile: 99.0  # *only used if white_balance_type is 'percentile'*
 
+denoising:
+  enabled: True
+  diameter: 5
+  sigma_color: 50.0
+  sigma_space: 50.0
+
 local_contrast_enhancement:
   enabled: True
   degree: 3
   smoothing: 0.2
 
-lecarm_tonemapping:  # Global method
+clahe:
+  enabled: False
+  kernel_size: 3
+  clip_limit: 1.0
+
+lecarm_tonemapping:  # Global method (Slow, needs downsampling to speed up computation)
   enabled: False
   camera_model: sigmoid  # Options: sigmoid, gamma, betagamma, preferred
-  downsampling: 1.0
-  scaling: 1.2
+  downsampling: 1.0  # How much should the image be downsampled to speed up computation
+  scaling: 0.8
 
 spatial_tonemapping:  # Local method
   enabled: True
@@ -28,14 +39,3 @@ spatial_tonemapping:  # Local method
   areas_dark: 0.5
   areas_bright: 0.5
   preserve_tones: True
-
-denoising:
-  enabled: False
-  diameter: 5
-  sigma_color: 50.0
-  sigma_space: 50.0
-
-clahe:
-  enabled: False
-  kernel_size: 5
-  clip_limit: 2.0

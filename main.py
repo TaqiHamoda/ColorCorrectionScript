@@ -92,11 +92,32 @@ if __name__ == '__main__':
             image_path = os.path.join(args.input_folder, filename)
             image = cv2.imread(image_path)
 
+            # Apply denoising
+            if 'denoising' in config and config['denoising']['enabled']:
+                image = denoise(image, config['denoising']['diameter'], config['denoising']['sigma_color'], config['denoising']['sigma_space'])
+
+            # Apply white balancing
+            if 'white_balance' in config and config['white_balance']['enabled']:
+                wb_algorithm = config['white_balance']['algorithm']
+                if wb_algorithm == 'percentile':
+                    image = white_balance_percentile(image, config['white_balance']['percentile'])
+                elif wb_algorithm == 'grayworld':
+                    image = white_balance_gray_world(image)
+                elif wb_algorithm == 'lab':
+                    image = white_balance_lab(image)
+
+            # Adjust brightness and saturation
+            image = adjust_brightness_saturation(image, config['brightness_factor'], 1)
+
             # Apply local contrast enhancement
             if 'local_contrast_enhancement' in config and config['local_contrast_enhancement']['enabled']:
                 image = local_contrast_enhancement(image, 
                                                         degree=config['local_contrast_enhancement']['degree'], 
                                                         smoothing=config['local_contrast_enhancement']['smoothing'])
+
+            # Apply CLAHE
+            if 'clahe' in config and config['clahe']['enabled']:
+                image = apply_clahe(image, config['clahe']['kernel_size'], config['clahe']['clip_limit'])
 
             # Apply spatial tonemapping
             if 'spatial_tonemapping' in config and config['spatial_tonemapping']['enabled']:
@@ -114,27 +135,6 @@ if __name__ == '__main__':
                    camera_model=config['lecarm_tonemapping']['camera_model'],
                    downsampling=config['lecarm_tonemapping']['downsampling'],
                    scaling=config['lecarm_tonemapping']['scaling'])
-
-            # Apply denoising
-            if 'denoising' in config and config['denoising']['enabled']:
-                image = denoise(image, config['denoising']['diameter'], config['denoising']['sigma_color'], config['denoising']['sigma_space'])
-
-            # Apply CLAHE
-            if 'clahe' in config and config['clahe']['enabled']:
-                image = apply_clahe(image, config['clahe']['kernel_size'], config['clahe']['clip_limit'])
-
-            # Adjust brightness and saturation
-            image = adjust_brightness_saturation(image, config['brightness_factor'], 1)
-
-            # Apply white balancing
-            if 'white_balance' in config and config['white_balance']['enabled']:
-                wb_algorithm = config['white_balance']['algorithm']
-                if wb_algorithm == 'percentile':
-                    image = white_balance_percentile(image, config['white_balance']['percentile'])
-                elif wb_algorithm == 'grayworld':
-                    image = white_balance_gray_world(image)
-                elif wb_algorithm == 'lab':
-                    image = white_balance_lab(image)
 
             image = adjust_brightness_saturation(image, 0, config['saturation_factor'])
 
