@@ -13,15 +13,30 @@ A Python script designed to enhance images of unexploded ordnance (UXO) through 
 
 ---
 
-## Example Results  
+## Pipeline Progression Results
 
-### Pipeline Progression  
-| Stage | Result |  
-|-------|--------|  
-| **Original Image** | ![Original](images/uxo1.jpg) |  
-| **White Balance (Grayworld)** | ![Grayworld](assets/uxo1-wb_grayworld.jpg) |  
-| **+ Denoising & LCE** | ![Denoise + LCE](assets/uxo1-wb_grayworld_denoise-d5-sc50.0-ss50.0_lce-degree3-smoothing0.2.jpg) |  
-| **+ LECARM Tonemapping** | ![Full Pipeline](assets/uxo1_b10.0_s1.25-wb_grayworld_denoise-d5-sc50.0-ss50.0_lce-degree3-smoothing0.2_lecarm-camerasigmoid-down1.0-scale0.8.jpg) |  
+<table>
+  <tr>
+    <th>Stage</th>
+    <th>Result</th>
+  </tr>
+  <tr>
+    <td><b>Original Image</b></td>
+    <td><img src="images/uxo1.jpg" width="720"></td>
+  </tr>
+  <tr>
+    <td><b>White Balance (Grayworld)</b></td>
+    <td><img src="assets/uxo1-wb_grayworld.jpg" width="720"></td>
+  </tr>
+  <tr>
+    <td><b>+ Denoising & LCE</b></td>
+    <td><img src="assets/uxo1-wb_grayworld_denoise-d5-sc50.0-ss50.0_lce-degree3-smoothing0.2.jpg" width="720"></td>
+  </tr>
+  <tr>
+    <td><b>+ LECARM Tonemapping</b></td>
+    <td><img src="assets/uxo1_b10.0_s1.25-wb_grayworld_denoise-d5-sc50.0-ss50.0_lce-degree3-smoothing0.2_lecarm-camerasigmoid-down1.0-scale0.8.jpg" width="720"></td>
+  </tr>
+</table>
 
 **Configuration Used for Final Enhanced Image**:
 
