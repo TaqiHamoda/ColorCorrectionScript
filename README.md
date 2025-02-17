@@ -2,16 +2,13 @@
 
 A Python script designed to enhance images of unexploded ordnance (UXO) through a configurable multi-stage pipeline. Optimizes visual quality for downstream processing tasks like object detection or classification.
 
----
-
 ## Features  
-- **White Balance Correction** (`grayworld`, `percentile`, or `lab`)  
-- **Brightness/Saturation Adjustment**  
-- **Contrast Enhancement** (CLAHE or Local Contrast Enhancement)  
-- **Denoising** (Bilateral Filtering)  
-- **Tonemapping** (Spatial or LECARM)  
 
----
+- **White Balance Correction** (`grayworld`, `percentile`, or `lab`)
+- **Brightness/Saturation Adjustment**
+- **Contrast Enhancement** (CLAHE or Local Contrast Enhancement)
+- **Denoising** (Bilateral Filtering)
+- **Tonemapping** (Spatial or LECARM)
 
 ## Pipeline Progression Results
 
